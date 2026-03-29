@@ -772,14 +772,28 @@ const POST_FILES = Object.keys(FS['posts/']).map(f => 'posts/' + f);
 
 function completions(partial) {
   const parts = partial.trimStart().split(/\s+/);
+
+  // Command name completion
   if (parts.length === 1) {
     return ALL_CMDS.filter(c => c.startsWith(parts[0]));
   }
+
+  const cmd = parts[0];
   const arg = parts[parts.length - 1] || '';
-  if (['cat', 'ls'].includes(parts[0])) {
-    const pool = arg.startsWith('posts') ? POST_FILES : [...ALL_FILES, ...POST_FILES];
+
+  // cat: complete filenames and post paths
+  if (cmd === 'cat') {
+    const pool = arg.startsWith('posts')
+      ? POST_FILES
+      : ['about.txt', 'contact.txt', 'posts/', ...POST_FILES];
     return pool.filter(f => f.startsWith(arg));
   }
+
+  // ls: only 'posts/' is a valid argument
+  if (cmd === 'ls') {
+    return ['posts/'].filter(f => f.startsWith(arg));
+  }
+
   return [];
 }
 
