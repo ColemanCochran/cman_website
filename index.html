@@ -11,7 +11,7 @@
 
     body {
       background: #0d0d0d;
-      color: #00ff41;
+      color: #e8e8e8;
       font-family: 'Courier New', Courier, monospace;
       font-size: 14px;
       line-height: 1.6;
@@ -41,14 +41,14 @@
 
     #terminal::-webkit-scrollbar { width: 4px; }
     #terminal::-webkit-scrollbar-track { background: transparent; }
-    #terminal::-webkit-scrollbar-thumb { background: #00882a; border-radius: 2px; }
+    #terminal::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
 
     #ascii-header {
       white-space: pre;
-      color: #00ff41;
+      color: #e8e8e8;
       font-size: clamp(5px, 1.05vw, 11px);
       line-height: 1.15;
-      text-shadow: 0 0 12px rgba(0,255,65,0.45);
+      text-shadow: 0 0 12px rgba(232,232,232,0.25);
       margin-bottom: 22px;
       overflow-x: hidden;
     }
@@ -57,7 +57,7 @@
 
     .ln { display: block; white-space: pre-wrap; word-break: break-word; }
 
-    .prompt-echo { color: #00ff41; margin-top: 6px; display: block; }
+    .prompt-echo { color: #e8e8e8; margin-top: 6px; display: block; }
 
     .out-block {
       color: #cccccc;
@@ -65,7 +65,7 @@
       margin-bottom: 10px;
       display: block;
     }
-    .out-block.green  { color: #00ff41; }
+    .out-block.green  { color: #e8e8e8; }
     .out-block.yellow { color: #ffd700; }
     .out-block.cyan   { color: #00d4ff; }
     .out-block.red    { color: #ff5555; }
@@ -81,7 +81,7 @@
     }
 
     #prompt-label {
-      color: #00ff41;
+      color: #e8e8e8;
       white-space: nowrap;
       user-select: none;
     }
@@ -91,11 +91,11 @@
       background: transparent;
       border: none;
       outline: none;
-      color: #00ff41;
+      color: #e8e8e8;
       font-family: inherit;
       font-size: inherit;
       line-height: inherit;
-      caret-color: #00ff41;
+      caret-color: #e8e8e8;
     }
 
     a { color: #4af; }
@@ -272,7 +272,7 @@ const CMDS = {
 
   help() {
     print(
-`<span style="color:#00ff41">available commands</span>
+`<span style="color:#e8e8e8">available commands</span>
 <span style="color:#333">────────────────────────────────────────────────</span>
   <span style="color:#ffd700">about</span>            who am I
   <span style="color:#ffd700">ls</span>               list files
@@ -330,7 +330,7 @@ const CMDS = {
 
   contact() {
     print(
-`<span style="color:#00ff41">get in touch</span>
+`<span style="color:#e8e8e8">get in touch</span>
 <span style="color:#333">────────────────────────────────────────────────</span>
   email      <a href="mailto:colemanrcochran@gmail.com">colemanrcochran@gmail.com</a>
   github     <a href="https://github.com/ColemanCochran/" target="_blank" rel="noopener">github.com/ColemanCochran</a>
@@ -344,13 +344,13 @@ const CMDS = {
     const start = new Date(year, 0, 1);
     const days  = Math.floor((now - start) / 86400000);
     print(
-`<span style="color:#00ff41">        .---.        </span>   <span style="color:#ffd700">visitor</span><span style="color:#555">@</span><span style="color:#00ff41">cochran</span>
-<span style="color:#00ff41">       /     \\       </span>   <span style="color:#555">──────────────────────</span>
-<span style="color:#00ff41">      | () () |      </span>   OS:         cochran-terminal 1.0
-<span style="color:#00ff41">       \\  ^  /       </span>   Host:       colemancochran.github.io
-<span style="color:#00ff41">        |||||        </span>   Uptime:     ${days} days this year
-<span style="color:#00ff41">        |||||        </span>   Shell:      js-terminal v1.0
-<span style="color:#00ff41">        \`---'        </span>   School:     USC + LSE
+`<span style="color:#e8e8e8">        .---.        </span>   <span style="color:#ffd700">visitor</span><span style="color:#555">@</span><span style="color:#e8e8e8">cochran</span>
+<span style="color:#e8e8e8">       /     \\       </span>   <span style="color:#555">──────────────────────</span>
+<span style="color:#e8e8e8">      | () () |      </span>   OS:         cochran-terminal 1.0
+<span style="color:#e8e8e8">       \\  ^  /       </span>   Host:       colemancochran.github.io
+<span style="color:#e8e8e8">        |||||        </span>   Uptime:     ${days} days this year
+<span style="color:#e8e8e8">        |||||        </span>   Shell:      js-terminal v1.0
+<span style="color:#e8e8e8">        \`---'        </span>   School:     USC + LSE
                       Languages:  Python · JS · MATLAB · R
                       Location:   Los Angeles, CA
                       Interests:  Math · Space · SaaS · Finance
@@ -414,7 +414,7 @@ cmdInput.addEventListener('keydown', e => {
 
     // Echo prompt + command
     printRaw(
-      `<span style="color:#00882a">visitor</span><span style="color:#333">@</span><span style="color:#00ff41">cochran</span><span style="color:#333">:~$</span> <span style="color:#00ff41">${esc(raw)}</span>`
+      `<span style="color:#aaaaaa">visitor</span><span style="color:#333">@</span><span style="color:#e8e8e8">cochran</span><span style="color:#333">:~$</span> <span style="color:#e8e8e8">${esc(raw)}</span>`
     );
 
     if (trimmed) {
@@ -453,7 +453,7 @@ cmdInput.addEventListener('keydown', e => {
       }
     } else if (comp.length > 1) {
       printRaw(
-        `<span style="color:#00882a">visitor</span><span style="color:#333">@</span><span style="color:#00ff41">cochran</span><span style="color:#333">:~$</span> <span style="color:#00ff41">${esc(cmdInput.value)}</span>`
+        `<span style="color:#aaaaaa">visitor</span><span style="color:#333">@</span><span style="color:#e8e8e8">cochran</span><span style="color:#333">:~$</span> <span style="color:#e8e8e8">${esc(cmdInput.value)}</span>`
       );
       printText(comp.join('   '), 'dim');
     }
@@ -463,7 +463,7 @@ cmdInput.addEventListener('keydown', e => {
   if (e.ctrlKey && e.key === 'c') {
     e.preventDefault();
     printRaw(
-      `<span style="color:#00882a">visitor</span><span style="color:#333">@</span><span style="color:#00ff41">cochran</span><span style="color:#333">:~$</span> <span style="color:#00ff41">${esc(cmdInput.value)}^C</span>`
+      `<span style="color:#aaaaaa">visitor</span><span style="color:#333">@</span><span style="color:#e8e8e8">cochran</span><span style="color:#333">:~$</span> <span style="color:#e8e8e8">${esc(cmdInput.value)}^C</span>`
     );
     cmdInput.value = '';
     return;
@@ -483,7 +483,7 @@ function runCmd(raw) {
   if (CMDS[cmd]) {
     CMDS[cmd](args);
   } else {
-    print(`<span style="color:#ff5555">command not found: ${esc(cmd)}</span>   <span style="color:#555">try <span style="color:#00ff41">help</span></span>`);
+    print(`<span style="color:#ff5555">command not found: ${esc(cmd)}</span>   <span style="color:#555">try <span style="color:#e8e8e8">help</span></span>`);
   }
   // blank line after each command output
   printRaw('');
@@ -496,7 +496,7 @@ document.addEventListener('click', () => cmdInput.focus());
 (function boot() {
   print(
 `<span style="color:#555">cochran-terminal v1.0.0  —  ${new Date().toDateString()}
-type <span style="color:#00ff41">help</span> to see available commands</span>`
+type <span style="color:#e8e8e8">help</span> to see available commands</span>`
   );
   printRaw('');
 })();
