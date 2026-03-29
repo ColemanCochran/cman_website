@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coleman Cochran</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      background: #0d0d0d;
+      color: #00ff41;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* CRT scanlines */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px, transparent 1px,
+        rgba(0,0,0,0.07) 1px, rgba(0,0,0,0.07) 2px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    #terminal {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 28px 12px;
+    }
+
+    #terminal::-webkit-scrollbar { width: 4px; }
+    #terminal::-webkit-scrollbar-track { background: transparent; }
+    #terminal::-webkit-scrollbar-thumb { background: #00882a; border-radius: 2px; }
+
+    #ascii-header {
+      white-space: pre;
+      color: #00ff41;
+      font-size: clamp(5px, 1.05vw, 11px);
+      line-height: 1.15;
+      text-shadow: 0 0 12px rgba(0,255,65,0.45);
+      margin-bottom: 22px;
+      overflow-x: hidden;
+    }
+
+    #output { }
+
+    .ln { display: block; white-space: pre-wrap; word-break: break-word; }
+
+    .prompt-echo { color: #00ff41; margin-top: 6px; display: block; }
+
+    .out-block {
+      color: #cccccc;
+      white-space: pre-wrap;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .out-block.green  { color: #00ff41; }
+    .out-block.yellow { color: #ffd700; }
+    .out-block.cyan   { color: #00d4ff; }
+    .out-block.red    { color: #ff5555; }
+    .out-block.dim    { color: #555555; }
+
+    #input-line {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      padding: 9px 28px;
+      border-top: 1px solid #1c1c1c;
+      background: #111;
+    }
+
+    #prompt-label {
+      color: #00ff41;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    #cmd-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #00ff41;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      caret-color: #00ff41;
+    }
+
+    a { color: #4af; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div id="terminal">
+  <div id="ascii-header"></div>
+  <div id="output"></div>
+</div>
+
+<div id="input-line">
+  <span id="prompt-label">visitor@cochran:~$ </span>
+  <input id="cmd-input" type="text" autofocus spellcheck="false"
+         autocomplete="off" autocorrect="off" autocapitalize="off">
+</div>
+
+<script>
+/* ── ASCII Header ────────────────────────────────────────────────── */
+const HEADER = `
+ ██████╗ ██████╗ ██╗     ███████╗███╗   ███╗ █████╗ ███╗   ██╗
+██╔════╝██╔═══██╗██║     ██╔════╝████╗ ████║██╔══██╗████╗  ██║
+██║     ██║   ██║██║     █████╗  ██╔████╔██║███████║██╔██╗ ██║
+██║     ██║   ██║██║     ██╔══╝  ██║╚██╔╝██║██╔══██║██║╚██╗██║
+╚██████╗╚██████╔╝███████╗███████╗██║ ╚═╝ ██║██║  ██║██║ ╚████║
+ ╚═════╝╚═════╝ ╚══════╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝
+
+ ██████╗ ██████╗  ██████╗██╗  ██╗██████╗  █████╗ ███╗   ██╗
+██╔════╝██╔═══██╗██╔════╝██║  ██║██╔══██╗██╔══██╗████╗  ██║
+██║     ██║   ██║██║     ███████║██████╔╝███████║██╔██╗ ██║
+██║     ██║   ██║██║     ██╔══██║██╔══██╗██╔══██║██║╚██╗██║
+╚██████╗╚██████╔╝╚██████╗██║  ██║██║  ██║██║  ██║██║ ╚████║
+ ╚═════╝╚═════╝  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝
+
+                   >>>  personal terminal  <<<
+`;
+
+/* ── Content ─────────────────────────────────────────────────────── */
+const FS = {
+  'about.txt': `name     Coleman Cochran
+school   University of Southern California
+         London School of Economics (junior year abroad)
+major    Applied & Computational Mathematics
+focus    Data Science · Computer Science
+
+I'm a student at USC and LSE studying Applied and Computational
+Mathematics with a focus on data science and computer science.
+I spent my full junior year at LSE in the math department so
+I partially claim it.
+
+I like math/cs but I use them as a framework to understand other
+topics — I don't think I could ever be a developer. This has
+assisted me as I've started to gain experience and explore topics
+in SaaS, finance, and the space industry.
+
+ChatGPT on me: "He has a soft spot for messy datasets, weirdly
+specific questions, and turning overthinking into a marketable
+skill. He builds things, analyzses stuff, and occasionally makes
+sense."`,
+
+  'contact.txt': `email      colemanrcochran@gmail.com
+github     https://github.com/ColemanCochran/
+linkedin   https://www.linkedin.com/in/coleman-cochran/`,
+
+  'posts/': {
+    'first-post.txt': {
+      date: '2025-06-14',
+      title: 'First Post',
+      body: `FIRST POST
+published: June 14, 2025
+────────────────────────────────────────────────
+
+I built the website yesterday and am now testing the blog feature.
+
+Writing this from the Heidelberg Cafe in Laguna Beach, California.
+
+I'm the only bozo with a laptop in this place — food was mid.`
+    },
+    'summer-update.txt': {
+      date: '2025-08-03',
+      title: 'Summer Update',
+      body: `SUMMER UPDATE
+published: August 3, 2025
+────────────────────────────────────────────────
+
+Haven't done very much on here — SpaceX constitutes a greater
+portion of my life than I think I'm willing to admit.
+
+I've really enjoyed what I've done this summer and am happy I'm
+staying till September.
+
+The most interesting thing I've learned about the company has been
+from events with the CEO and CFO. The company is undeniably directed
+toward reaching Mars — things like Starlink feel like "simple" (hehe)
+intermediate steps. SpaceX doesn't like money for money's sake — it's
+really an "in-game currency" to enable the Mars mission. I sound
+ridiculous since it is both visibly true externally and internally,
+but for whatever reason, I suspected an ulterior motive somewhere
+in there.
+
+I've definitely taken the Mars pill and have adopted the SpaceX
+attitude. I think once the AI hype wave runs its course, the space
+industry will be next. AI or space: pick your poison.
+
+Other than work, I've had to move three separate times with an
+additional and final move approaching. I've been living out of
+cardboard boxes and have been simulating the SF founder mode
+experience. Fortunately, since I'm in Hawthorne for more than half
+the week's hours, I go home, sleep, then immediately leave in the
+morning.
+
+Anyhow, I miss London and Europe. I talked a lot of trash about
+London, but that was a time. Great city, even though the food is a
+challenge. Definitely miss Paris.
+
+I went to Mexico City on July 4th and witnessed the
+anti-gentrification / digital nomad protests. Going to SF and NYC
+relatively soon.
+
+Excited for senior year to start but have a feeling I'm going to
+wonder why I'm doing it. I feel like USC doesn't inspire me to
+build/learn/risk-take like LSE did. I'll have to find that motivation
+in a new project. Otherwise, looking forward to taking interesting
+math courses and fluffy GPA booster classes with non-math people.`
+    }
+  }
+};
+
+/* ── State ───────────────────────────────────────────────────────── */
+let cmdHistory = [];
+let histIdx    = -1;
+
+/* ── DOM ─────────────────────────────────────────────────────────── */
+const terminal  = document.getElementById('terminal');
+const output    = document.getElementById('output');
+const cmdInput  = document.getElementById('cmd-input');
+const hdrEl     = document.getElementById('ascii-header');
+
+hdrEl.textContent = HEADER;
+
+/* ── Output helpers ──────────────────────────────────────────────── */
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function print(html, cls = '') {
+  const el = document.createElement('span');
+  el.className = 'out-block ' + cls;
+  el.innerHTML = html;
+  output.appendChild(el);
+  scrollDown();
+}
+
+function printText(text, cls = '') {
+  print(esc(text), cls);
+}
+
+function printRaw(html) {
+  const el = document.createElement('span');
+  el.className = 'ln';
+  el.innerHTML = html;
+  output.appendChild(el);
+  scrollDown();
+}
+
+function scrollDown() {
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+/* ── Commands ────────────────────────────────────────────────────── */
+const CMDS = {
+
+  help() {
+    print(
+`<span style="color:#00ff41">available commands</span>
+<span style="color:#333">────────────────────────────────────────────────</span>
+  <span style="color:#ffd700">about</span>            who am I
+  <span style="color:#ffd700">ls</span>               list files
+  <span style="color:#ffd700">ls posts/</span>        list blog posts
+  <span style="color:#ffd700">cat</span> [file]       read a file
+  <span style="color:#ffd700">contact</span>          get in touch
+  <span style="color:#ffd700">neofetch</span>         system info
+  <span style="color:#ffd700">clear</span>            clear screen
+  <span style="color:#ffd700">history</span>          command history
+  <span style="color:#ffd700">date</span>             current date/time
+  <span style="color:#ffd700">echo</span> [text]      print text
+  <span style="color:#ffd700">exit</span>             close session
+
+<span style="color:#333">tip: use ↑↓ for history, Tab for completion</span>`
+    );
+  },
+
+  ls(args) {
+    const target = (args[0] || '').replace(/\/$/, '');
+    if (!target || target === '.' || target === '~') {
+      print(
+`<span style="color:#00d4ff">about.txt</span>   <span style="color:#00d4ff">contact.txt</span>   <span style="color:#ffd700">posts/</span>`
+      );
+    } else if (target === 'posts') {
+      const entries = Object.entries(FS['posts/']);
+      const lines = entries.map(([name, f]) =>
+        `  <span style="color:#00d4ff">${esc(name)}</span>   <span style="color:#555">${f.date} — ${esc(f.title)}</span>`
+      ).join('\n');
+      print(`posts/\n${lines}`);
+    } else {
+      print(`<span style="color:#ff5555">ls: cannot access '${esc(target)}': No such file or directory</span>`);
+    }
+  },
+
+  cat(args) {
+    if (!args.length) {
+      print(`<span style="color:#ff5555">cat: missing operand</span>`);
+      return;
+    }
+    const path = args[0];
+
+    if (path === 'about.txt') { printText(FS['about.txt']); return; }
+    if (path === 'contact.txt') { printText(FS['contact.txt']); return; }
+
+    // posts/filename or just filename
+    const bare = path.replace(/^posts\//, '');
+    const post = FS['posts/'][bare];
+    if (post) { printText(post.body); return; }
+
+    print(`<span style="color:#ff5555">cat: ${esc(path)}: No such file or directory</span>`);
+  },
+
+  about() { printText(FS['about.txt']); },
+  whoami() { printText(FS['about.txt']); },
+
+  contact() {
+    print(
+`<span style="color:#00ff41">get in touch</span>
+<span style="color:#333">────────────────────────────────────────────────</span>
+  email      <a href="mailto:colemanrcochran@gmail.com">colemanrcochran@gmail.com</a>
+  github     <a href="https://github.com/ColemanCochran/" target="_blank" rel="noopener">github.com/ColemanCochran</a>
+  linkedin   <a href="https://www.linkedin.com/in/coleman-cochran/" target="_blank" rel="noopener">linkedin.com/in/coleman-cochran</a>`
+    );
+  },
+
+  neofetch() {
+    const now   = new Date();
+    const year  = now.getFullYear();
+    const start = new Date(year, 0, 1);
+    const days  = Math.floor((now - start) / 86400000);
+    print(
+`<span style="color:#00ff41">        .---.        </span>   <span style="color:#ffd700">visitor</span><span style="color:#555">@</span><span style="color:#00ff41">cochran</span>
+<span style="color:#00ff41">       /     \\       </span>   <span style="color:#555">──────────────────────</span>
+<span style="color:#00ff41">      | () () |      </span>   OS:         cochran-terminal 1.0
+<span style="color:#00ff41">       \\  ^  /       </span>   Host:       colemancochran.github.io
+<span style="color:#00ff41">        |||||        </span>   Uptime:     ${days} days this year
+<span style="color:#00ff41">        |||||        </span>   Shell:      js-terminal v1.0
+<span style="color:#00ff41">        \`---'        </span>   School:     USC + LSE
+                      Languages:  Python · JS · MATLAB · R
+                      Location:   Los Angeles, CA
+                      Interests:  Math · Space · SaaS · Finance
+
+  <span style="background:#ff5555;color:#ff5555">███</span><span style="background:#ffaa00;color:#ffaa00">███</span><span style="background:#ffff55;color:#ffff55">███</span><span style="background:#55ff55;color:#55ff55">███</span><span style="background:#55ffff;color:#55ffff">███</span><span style="background:#5555ff;color:#5555ff">███</span><span style="background:#ff55ff;color:#ff55ff">███</span><span style="background:#aaaaaa;color:#aaaaaa">███</span>`
+    );
+  },
+
+  clear() { output.innerHTML = ''; },
+
+  history() {
+    if (!cmdHistory.length) { printText('no history yet.', 'dim'); return; }
+    const lines = cmdHistory.map((c, i) =>
+      `  ${String(i + 1).padStart(4)}  ${c}`
+    ).join('\n');
+    printText(lines, 'dim');
+  },
+
+  date() { printText(new Date().toString()); },
+
+  echo(args) { printText(args.join(' ')); },
+
+  pwd() { printText('/home/visitor'); },
+
+  exit() {
+    print(`<span style="color:#555">logout: connection to cochran closed.
+        refresh the page to reconnect.</span>`);
+  },
+
+  logout() { CMDS.exit(); },
+
+  uname(args) {
+    if (args[0] === '-a') printText('CochranOS cochran-terminal 1.0.0 JS/ES2024 x86_64');
+    else printText('CochranOS');
+  },
+};
+
+/* ── Tab completion ──────────────────────────────────────────────── */
+const ALL_CMDS  = Object.keys(CMDS);
+const ALL_FILES = ['about.txt', 'contact.txt', 'posts/'];
+const POST_FILES = Object.keys(FS['posts/']).map(f => 'posts/' + f);
+
+function completions(partial) {
+  const parts = partial.trimStart().split(/\s+/);
+  if (parts.length === 1) {
+    return ALL_CMDS.filter(c => c.startsWith(parts[0]));
+  }
+  const arg = parts[parts.length - 1] || '';
+  if (['cat', 'ls'].includes(parts[0])) {
+    const pool = arg.startsWith('posts') ? POST_FILES : [...ALL_FILES, ...POST_FILES];
+    return pool.filter(f => f.startsWith(arg));
+  }
+  return [];
+}
+
+/* ── Input handling ──────────────────────────────────────────────── */
+cmdInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const raw = cmdInput.value;
+    const trimmed = raw.trim();
+
+    // Echo prompt + command
+    printRaw(
+      `<span style="color:#00882a">visitor</span><span style="color:#333">@</span><span style="color:#00ff41">cochran</span><span style="color:#333">:~$</span> <span style="color:#00ff41">${esc(raw)}</span>`
+    );
+
+    if (trimmed) {
+      cmdHistory.push(trimmed);
+      histIdx = cmdHistory.length;
+      runCmd(trimmed);
+    }
+    cmdInput.value = '';
+    scrollDown();
+    return;
+  }
+
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (histIdx > 0) { histIdx--; cmdInput.value = cmdHistory[histIdx]; }
+    return;
+  }
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (histIdx < cmdHistory.length - 1) { histIdx++; cmdInput.value = cmdHistory[histIdx]; }
+    else { histIdx = cmdHistory.length; cmdInput.value = ''; }
+    return;
+  }
+
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const comp = completions(cmdInput.value);
+    if (comp.length === 1) {
+      const parts = cmdInput.value.trimStart().split(/\s+/);
+      if (parts.length === 1) {
+        cmdInput.value = comp[0] + ' ';
+      } else {
+        parts[parts.length - 1] = comp[0];
+        cmdInput.value = parts.join(' ') + ' ';
+      }
+    } else if (comp.length > 1) {
+      printRaw(
+        `<span style="color:#00882a">visitor</span><span style="color:#333">@</span><span style="color:#00ff41">cochran</span><span style="color:#333">:~$</span> <span style="color:#00ff41">${esc(cmdInput.value)}</span>`
+      );
+      printText(comp.join('   '), 'dim');
+    }
+    return;
+  }
+
+  if (e.ctrlKey && e.key === 'c') {
+    e.preventDefault();
+    printRaw(
+      `<span style="color:#00882a">visitor</span><span style="color:#333">@</span><span style="color:#00ff41">cochran</span><span style="color:#333">:~$</span> <span style="color:#00ff41">${esc(cmdInput.value)}^C</span>`
+    );
+    cmdInput.value = '';
+    return;
+  }
+
+  if (e.ctrlKey && e.key === 'l') {
+    e.preventDefault();
+    CMDS.clear();
+    return;
+  }
+});
+
+function runCmd(raw) {
+  const parts = raw.trim().split(/\s+/);
+  const cmd   = parts[0].toLowerCase();
+  const args  = parts.slice(1);
+  if (CMDS[cmd]) {
+    CMDS[cmd](args);
+  } else {
+    print(`<span style="color:#ff5555">command not found: ${esc(cmd)}</span>   <span style="color:#555">try <span style="color:#00ff41">help</span></span>`);
+  }
+  // blank line after each command output
+  printRaw('');
+}
+
+// Keep input focused
+document.addEventListener('click', () => cmdInput.focus());
+
+/* ── Boot ────────────────────────────────────────────────────────── */
+(function boot() {
+  print(
+`<span style="color:#555">cochran-terminal v1.0.0  —  ${new Date().toDateString()}
+type <span style="color:#00ff41">help</span> to see available commands</span>`
+  );
+  printRaw('');
+})();
+</script>
+</body>
+</html>
