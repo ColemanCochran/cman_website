@@ -33,6 +33,46 @@
       z-index: 999;
     }
 
+    /* ── Mode bar ───────────────────────────────────────────────── */
+    #mode-bar {
+      display: flex;
+      gap: 8px;
+      padding: 8px 28px;
+      background: #111;
+      border-bottom: 1px solid #1c1c1c;
+      flex-shrink: 0;
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: 1px solid #333;
+      color: #555;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      padding: 4px 14px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: border-color 0.1s, color 0.1s;
+    }
+
+    .mode-btn.active {
+      border-color: #e8e8e8;
+      color: #e8e8e8;
+    }
+
+    .mode-btn:hover:not(.active) {
+      border-color: #888;
+      color: #888;
+    }
+
+    /* ── Terminal view ──────────────────────────────────────────── */
+    #terminal-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
     #terminal {
       flex: 1;
       overflow-y: auto;
@@ -53,11 +93,7 @@
       overflow-x: hidden;
     }
 
-    #output { }
-
     .ln { display: block; white-space: pre-wrap; word-break: break-word; }
-
-    .prompt-echo { color: #e8e8e8; margin-top: 6px; display: block; }
 
     .out-block {
       color: #cccccc;
@@ -100,19 +136,230 @@
 
     a { color: #4af; }
     a:hover { text-decoration: underline; }
+
+    /* ── GUI view ───────────────────────────────────────────────── */
+    #gui-view {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 28px;
+      display: none;
+    }
+
+    #gui-view::-webkit-scrollbar { width: 4px; }
+    #gui-view::-webkit-scrollbar-track { background: transparent; }
+    #gui-view::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
+
+    .gui-header {
+      margin-bottom: 28px;
+    }
+
+    .gui-header h1 {
+      font-size: 18px;
+      font-weight: normal;
+      color: #e8e8e8;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .gui-header p {
+      color: #444;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .gui-nav {
+      display: flex;
+      gap: 0;
+      margin-bottom: 28px;
+      border-bottom: 1px solid #1c1c1c;
+    }
+
+    .gui-nav-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #555;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      padding: 6px 18px 8px;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: -1px;
+      transition: color 0.1s, border-color 0.1s;
+    }
+
+    .gui-nav-btn.active {
+      border-bottom-color: #ffd700;
+      color: #ffd700;
+    }
+
+    .gui-nav-btn:hover:not(.active) {
+      color: #aaa;
+    }
+
+    .gui-section { display: none; }
+    .gui-section.active { display: block; }
+
+    .gui-text {
+      color: #cccccc;
+      white-space: pre-wrap;
+      line-height: 1.9;
+      max-width: 680px;
+    }
+
+    .gui-post-item {
+      border-bottom: 1px solid #1c1c1c;
+    }
+
+    .gui-post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      cursor: pointer;
+      padding: 14px 0;
+    }
+
+    .gui-post-header:hover .gui-post-title {
+      color: #ffd700;
+    }
+
+    .gui-post-title {
+      color: #e8e8e8;
+      font-size: 13px;
+      transition: color 0.1s;
+    }
+
+    .gui-post-meta {
+      color: #444;
+      font-size: 11px;
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+
+    .gui-post-body {
+      display: none;
+      color: #cccccc;
+      white-space: pre-wrap;
+      padding: 0 0 16px 16px;
+      border-left: 1px solid #2a2a2a;
+      line-height: 1.9;
+      font-size: 13px;
+    }
+
+    .gui-post-body.open { display: block; }
+
+    .gui-contact-row {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 12px 0;
+      border-bottom: 1px solid #1c1c1c;
+    }
+
+    .gui-contact-label {
+      color: #444;
+      font-size: 12px;
+      width: 72px;
+      flex-shrink: 0;
+    }
+
+    .gui-contact-value { color: #cccccc; }
+    .gui-contact-value a { color: #4af; }
+
+    .gui-project-card {
+      display: block;
+      padding: 16px 20px;
+      border: 1px solid #2a2a2a;
+      text-decoration: none;
+      max-width: 320px;
+      transition: border-color 0.1s;
+    }
+
+    .gui-project-card:hover { border-color: #ffd700; }
+
+    .gui-project-name {
+      color: #e8e8e8;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .gui-project-url {
+      color: #4af;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
 
-<div id="terminal">
-  <div id="ascii-header"></div>
-  <div id="output"></div>
+<!-- Mode toggle bar -->
+<div id="mode-bar">
+  <button class="mode-btn active" id="btn-terminal" onclick="setMode('terminal')">[ TERMINAL ]</button>
+  <button class="mode-btn" id="btn-gui" onclick="setMode('gui')">[ SITE / GUI ]</button>
 </div>
 
-<div id="input-line">
-  <span id="prompt-label">visitor@cochran:~$ </span>
-  <input id="cmd-input" type="text" autofocus spellcheck="false"
-         autocomplete="off" autocorrect="off" autocapitalize="off">
+<!-- Terminal view -->
+<div id="terminal-view">
+  <div id="terminal">
+    <div id="ascii-header"></div>
+    <div id="output"></div>
+  </div>
+  <div id="input-line">
+    <span id="prompt-label">visitor@cochran:~$ </span>
+    <input id="cmd-input" type="text" autofocus spellcheck="false"
+           autocomplete="off" autocorrect="off" autocapitalize="off">
+  </div>
+</div>
+
+<!-- GUI view -->
+<div id="gui-view">
+  <div class="gui-header">
+    <h1>Coleman Cochran</h1>
+    <p>personal terminal — GUI mode</p>
+  </div>
+
+  <nav class="gui-nav">
+    <button class="gui-nav-btn active" onclick="guiTab('about', this)">About</button>
+    <button class="gui-nav-btn" onclick="guiTab('posts', this)">Posts</button>
+    <button class="gui-nav-btn" onclick="guiTab('contact', this)">Contact</button>
+    <button class="gui-nav-btn" onclick="guiTab('projects', this)">Projects</button>
+  </nav>
+
+  <div id="gui-about" class="gui-section active">
+    <div class="gui-text" id="gui-about-text"></div>
+  </div>
+
+  <div id="gui-posts" class="gui-section">
+    <div id="gui-posts-list"></div>
+  </div>
+
+  <div id="gui-projects" class="gui-section">
+    <a href="https://coleman.business/" target="_blank" rel="noopener" class="gui-project-card">
+      <div class="gui-project-name">Coleman AI</div>
+      <div class="gui-project-url">coleman.business ↗</div>
+    </a>
+  </div>
+
+  <div id="gui-contact" class="gui-section">
+    <div class="gui-contact-row">
+      <span class="gui-contact-label">email</span>
+      <span class="gui-contact-value">
+        <a href="mailto:colemanrcochran@gmail.com">colemanrcochran@gmail.com</a>
+      </span>
+    </div>
+    <div class="gui-contact-row">
+      <span class="gui-contact-label">github</span>
+      <span class="gui-contact-value">
+        <a href="https://github.com/ColemanCochran/" target="_blank" rel="noopener">github.com/ColemanCochran</a>
+      </span>
+    </div>
+    <div class="gui-contact-row">
+      <span class="gui-contact-label">linkedin</span>
+      <span class="gui-contact-value">
+        <a href="https://www.linkedin.com/in/coleman-cochran/" target="_blank" rel="noopener">linkedin.com/in/coleman-cochran</a>
+      </span>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -229,6 +476,7 @@ math courses and fluffy GPA booster classes with non-math people.`
 /* ── State ───────────────────────────────────────────────────────── */
 let cmdHistory = [];
 let histIdx    = -1;
+let bootHTML   = '';
 
 /* ── DOM ─────────────────────────────────────────────────────────── */
 const terminal  = document.getElementById('terminal');
@@ -277,14 +525,11 @@ const CMDS = {
   <span style="color:#ffd700">about</span>            who am I
   <span style="color:#ffd700">ls</span>               list files
   <span style="color:#ffd700">ls posts/</span>        list blog posts
-  <span style="color:#ffd700">cat</span> [file]       read a file
+  <span style="color:#ffd700">cat</span> [file]       select and read a file
   <span style="color:#ffd700">contact</span>          get in touch
   <span style="color:#ffd700">neofetch</span>         system info
   <span style="color:#ffd700">clear</span>            clear screen
-  <span style="color:#ffd700">history</span>          command history
-  <span style="color:#ffd700">date</span>             current date/time
-  <span style="color:#ffd700">echo</span> [text]      print text
-  <span style="color:#ffd700">exit</span>             close session
+  <span style="color:#ffd700">coleman-ai</span>       open Coleman AI project
 
 <span style="color:#333">tip: use ↑↓ for history, Tab for completion</span>`
     );
@@ -359,28 +604,19 @@ const CMDS = {
     );
   },
 
-  clear() { output.innerHTML = ''; },
-
-  history() {
-    if (!cmdHistory.length) { printText('no history yet.', 'dim'); return; }
-    const lines = cmdHistory.map((c, i) =>
-      `  ${String(i + 1).padStart(4)}  ${c}`
-    ).join('\n');
-    printText(lines, 'dim');
+  clear() {
+    output.innerHTML = bootHTML;
+    scrollDown();
   },
 
-  date() { printText(new Date().toString()); },
-
-  echo(args) { printText(args.join(' ')); },
+  'coleman-ai'() {
+    print(`<span style="color:#e8e8e8">Coleman AI</span>
+<span style="color:#333">────────────────────────────────────────────────</span>
+  <a href="https://coleman.business/" target="_blank" rel="noopener">coleman.business</a>`);
+    window.open('https://coleman.business/', '_blank', 'noopener');
+  },
 
   pwd() { printText('/home/visitor'); },
-
-  exit() {
-    print(`<span style="color:#555">logout: connection to cochran closed.
-        refresh the page to reconnect.</span>`);
-  },
-
-  logout() { CMDS.exit(); },
 
   uname(args) {
     if (args[0] === '-a') printText('CochranOS cochran-terminal 1.0.0 JS/ES2024 x86_64');
@@ -389,8 +625,8 @@ const CMDS = {
 };
 
 /* ── Tab completion ──────────────────────────────────────────────── */
-const ALL_CMDS  = Object.keys(CMDS);
-const ALL_FILES = ['about.txt', 'contact.txt', 'posts/'];
+const ALL_CMDS   = Object.keys(CMDS);
+const ALL_FILES  = ['about.txt', 'contact.txt', 'posts/'];
 const POST_FILES = Object.keys(FS['posts/']).map(f => 'posts/' + f);
 
 function completions(partial) {
@@ -412,7 +648,6 @@ cmdInput.addEventListener('keydown', e => {
     const raw = cmdInput.value;
     const trimmed = raw.trim();
 
-    // Echo prompt + command
     printRaw(
       `<span style="color:#aaaaaa">visitor</span><span style="color:#333">@</span><span style="color:#e8e8e8">cochran</span><span style="color:#333">:~$</span> <span style="color:#e8e8e8">${esc(raw)}</span>`
     );
@@ -485,11 +720,9 @@ function runCmd(raw) {
   } else {
     print(`<span style="color:#ff5555">command not found: ${esc(cmd)}</span>   <span style="color:#555">try <span style="color:#e8e8e8">help</span></span>`);
   }
-  // blank line after each command output
   printRaw('');
 }
 
-// Keep input focused
 document.addEventListener('click', () => cmdInput.focus());
 
 /* ── Boot ────────────────────────────────────────────────────────── */
@@ -499,7 +732,69 @@ document.addEventListener('click', () => cmdInput.focus());
 type <span style="color:#e8e8e8">help</span> to see available commands</span>`
   );
   printRaw('');
+  bootHTML = output.innerHTML;
 })();
+
+/* ── Mode switching ──────────────────────────────────────────────── */
+function setMode(mode) {
+  const termView = document.getElementById('terminal-view');
+  const guiView  = document.getElementById('gui-view');
+  const btnT     = document.getElementById('btn-terminal');
+  const btnG     = document.getElementById('btn-gui');
+
+  if (mode === 'terminal') {
+    termView.style.display = 'flex';
+    guiView.style.display  = 'none';
+    btnT.classList.add('active');
+    btnG.classList.remove('active');
+    cmdInput.focus();
+  } else {
+    termView.style.display = 'none';
+    guiView.style.display  = 'block';
+    btnT.classList.remove('active');
+    btnG.classList.add('active');
+    buildGUI();
+  }
+}
+
+/* ── GUI builder (runs once) ─────────────────────────────────────── */
+let guiBuilt = false;
+function buildGUI() {
+  if (guiBuilt) return;
+  guiBuilt = true;
+
+  document.getElementById('gui-about-text').textContent = FS['about.txt'];
+
+  const postsList = document.getElementById('gui-posts-list');
+  Object.entries(FS['posts/']).forEach(([, post]) => {
+    const item = document.createElement('div');
+    item.className = 'gui-post-item';
+
+    const header = document.createElement('div');
+    header.className = 'gui-post-header';
+    header.innerHTML =
+      `<span class="gui-post-title">${esc(post.title)}</span>` +
+      `<span class="gui-post-meta">${esc(post.date)}</span>`;
+
+    const body = document.createElement('div');
+    body.className = 'gui-post-body';
+    body.textContent = post.body;
+
+    header.addEventListener('click', () => body.classList.toggle('open'));
+
+    item.appendChild(header);
+    item.appendChild(body);
+    postsList.appendChild(item);
+  });
+}
+
+/* ── GUI tab switching ───────────────────────────────────────────── */
+function guiTab(name, btn) {
+  document.querySelectorAll('.gui-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.gui-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('gui-' + name).classList.add('active');
+  btn.classList.add('active');
+}
 </script>
 </body>
 </html>
