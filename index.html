@@ -767,8 +767,8 @@ const CMDS = {
 
 /* ── Tab completion ──────────────────────────────────────────────── */
 const ALL_CMDS   = Object.keys(CMDS);
-const ALL_FILES  = ['about.txt', 'contact.txt', 'posts/'];
 const POST_FILES = Object.keys(FS['posts/']).map(f => 'posts/' + f);
+const BARE_POSTS = Object.keys(FS['posts/']); // e.g. 'first-post.txt'
 
 function completions(partial) {
   const parts = partial.trimStart().split(/\s+/);
@@ -781,11 +781,12 @@ function completions(partial) {
   const cmd = parts[0];
   const arg = parts[parts.length - 1] || '';
 
-  // cat: complete filenames and post paths
+  // cat: if arg starts with 'posts' use prefixed paths,
+  //      otherwise offer flat names (about.txt, contact.txt, first-post.txt, ...)
   if (cmd === 'cat') {
     const pool = arg.startsWith('posts')
       ? POST_FILES
-      : ['about.txt', 'contact.txt', 'posts/', ...POST_FILES];
+      : ['about.txt', 'contact.txt', ...BARE_POSTS];
     return pool.filter(f => f.startsWith(arg));
   }
 
