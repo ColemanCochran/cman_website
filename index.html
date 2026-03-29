@@ -267,16 +267,6 @@
     .gui-contact-value { color: #cccccc; }
     .gui-contact-value a { color: #4af; }
 
-    /* Portrait */
-    #gui-portrait-art {
-      white-space: pre;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: clamp(3.5px, 0.7vw, 7px);
-      line-height: 1.1;
-      color: #e8e8e8;
-      overflow-x: auto;
-    }
-
     .gui-project-card {
       display: block;
       padding: 16px 20px;
@@ -333,7 +323,6 @@
     <button class="gui-nav-btn" onclick="guiTab('posts', this)">Posts</button>
     <button class="gui-nav-btn" onclick="guiTab('contact', this)">Contact</button>
     <button class="gui-nav-btn" onclick="guiTab('projects', this)">Projects</button>
-    <button class="gui-nav-btn" onclick="guiTab('portrait', this)">Portrait</button>
   </nav>
 
   <div id="gui-about" class="gui-section active">
@@ -349,10 +338,6 @@
       <div class="gui-project-name">Coleman AI</div>
       <div class="gui-project-url">coleman.business ↗</div>
     </a>
-  </div>
-
-  <div id="gui-portrait" class="gui-section">
-    <pre id="gui-portrait-art"></pre>
   </div>
 
   <div id="gui-contact" class="gui-section">
@@ -831,7 +816,6 @@ function buildGUI() {
   guiBuilt = true;
 
   document.getElementById('gui-about-text').textContent = FS['about.txt'];
-  document.getElementById('gui-portrait-art').textContent = PORTRAIT;
 
   const postsList = document.getElementById('gui-posts-list');
   Object.entries(FS['posts/']).forEach(([, post]) => {
