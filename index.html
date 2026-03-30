@@ -876,47 +876,7 @@ const CMDS = {
     const worldEl  = document.getElementById('data-world-map');
     const europeEl = document.getElementById('data-europe-map');
     const worldArt  = worldEl  ? worldEl.textContent.replace(/\r/g, '').replace(/^\n+/, '').replace(/\n+$/, '')  : '(map unavailable)';
-    const europeRaw = europeEl ? europeEl.textContent.replace(/\r/g, '').replace(/^\n+/, '').replace(/\n+$/, '') : '(map unavailable)';
-
-    // Overlay visited European countries on the europe map
-    // [row, col, 'AB'] — zero-indexed row and column in the ASCII art
-    const EURO_MARKS = [
-      [0,  53, 'IS'],
-      [0,  26, 'DK'],
-      [1,   4, 'UK'],
-      [2,  26, 'PL'],
-      [3,  19, 'DE'],
-      [3,  25, 'CZ'],
-      [4,  13, 'BE'],
-      [4,  20, 'CH'],
-      [4,  24, 'AT'],
-      [5,  11, 'FR'],
-      [5,  19, 'MC'],
-      [5,  27, 'HU'],
-      [6,  20, 'IT'],
-      [6,  28, 'HR'],
-      [7,   3, 'PT'],
-      [7,   9, 'ES'],
-    ];
-
-    // Build overlaid europe art
-    let euroLines = europeRaw.split('\n');
-    for (const [row, col, code] of EURO_MARKS) {
-      if (row >= euroLines.length) continue;
-      let line = euroLines[row];
-      // Pad line if shorter than needed
-      while (line.length < col + 2) line += ' ';
-      euroLines[row] = line.slice(0, col) + '\x00' + code + '\x01' + line.slice(col + 2);
-    }
-    // Now HTML-encode each line, then replace placeholders with gold spans
-    const euroArtHtml = euroLines.map(ln => {
-      const parts = ln.split(/\x00([A-Z]{2})\x01/);
-      return parts.map((p, i) =>
-        i % 2 === 1
-          ? `<span style="color:#ffd700;font-weight:bold">${p}</span>`
-          : esc(p)
-      ).join('');
-    }).join('\n');
+    const europeArt = europeEl ? europeEl.textContent.replace(/\r/g, '').replace(/^\n+/, '').replace(/\n+$/, '') : '(map unavailable)';
 
     print(
 `<span style="color:#e8e8e8">world map</span>  <span style="color:#555">— 24 destinations</span>
@@ -932,11 +892,9 @@ const CMDS = {
 
 <span style="color:#333">────────────────────────────────────────────────────────────────────────────</span>
 
-<span style="color:#e8e8e8">europe</span>  <span style="color:#555">— 16 countries  ·  <span style="color:#ffd700">gold</span> = visited</span>
+<span style="color:#e8e8e8">europe</span>  <span style="color:#555">— 16 countries visited</span>
 
-<span style="color:#444">${euroArtHtml}</span>
-
-  IS · DK · UK · PL · DE · CZ · BE · CH · AT · FR · MC · HU · IT · HR · PT · ES`
+<span style="color:#444">${esc(europeArt)}</span>`
     );
   },
 
