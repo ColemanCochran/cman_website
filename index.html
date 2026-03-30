@@ -295,7 +295,6 @@
 <!-- Mode toggle bar -->
 <div id="mode-bar">
   <button class="mode-btn active" id="btn-terminal" onclick="setMode('terminal')">[ TERMINAL ]</button>
-  <button class="mode-btn" id="btn-gui" onclick="setMode('gui')">[ SITE / GUI ]</button>
 </div>
 
 <!-- Terminal view -->
@@ -321,6 +320,7 @@
   <nav class="gui-nav">
     <button class="gui-nav-btn active" onclick="guiTab('about', this)">About</button>
     <button class="gui-nav-btn" onclick="guiTab('posts', this)">Posts</button>
+    <button class="gui-nav-btn" onclick="guiTab('travel', this)">Travel</button>
     <button class="gui-nav-btn" onclick="guiTab('contact', this)">Contact</button>
     <button class="gui-nav-btn" onclick="guiTab('projects', this)">Projects</button>
   </nav>
@@ -331,6 +331,10 @@
 
   <div id="gui-posts" class="gui-section">
     <div id="gui-posts-list"></div>
+  </div>
+
+  <div id="gui-travel" class="gui-section">
+    <div id="gui-travel-list"></div>
   </div>
 
   <div id="gui-projects" class="gui-section">
@@ -456,6 +460,33 @@ living. Planning on using this background in other fields.`,
   'contact.txt': `email      colemanrcochran@gmail.com
 github     https://github.com/ColemanCochran/
 linkedin   https://www.linkedin.com/in/coleman-cochran/`,
+
+  'travel_log/': {
+    'canada.txt':       { date: '', location: 'Canada' },
+    'mexico.txt':       { date: '', location: 'Mexico' },
+    'costa-rica.txt':   { date: '', location: 'Costa Rica' },
+    'peru.txt':         { date: '', location: 'Peru' },
+    'st-lucia.txt':     { date: '', location: 'St. Lucia' },
+    'iceland.txt':      { date: '', location: 'Iceland' },
+    'uk.txt':           { date: '', location: 'United Kingdom' },
+    'france.txt':       { date: '', location: 'France' },
+    'spain.txt':        { date: '', location: 'Spain' },
+    'portugal.txt':     { date: '', location: 'Portugal' },
+    'italy.txt':        { date: '', location: 'Italy' },
+    'germany.txt':      { date: '', location: 'Germany' },
+    'poland.txt':       { date: '', location: 'Poland' },
+    'belgium.txt':      { date: '', location: 'Belgium' },
+    'denmark.txt':      { date: '', location: 'Denmark' },
+    'austria.txt':      { date: '', location: 'Austria' },
+    'czechia.txt':      { date: '', location: 'Czechia' },
+    'hungary.txt':      { date: '', location: 'Hungary' },
+    'croatia.txt':      { date: '', location: 'Croatia' },
+    'monaco.txt':       { date: '', location: 'Monaco' },
+    'switzerland.txt':  { date: '', location: 'Switzerland' },
+    'morocco.txt':      { date: '', location: 'Morocco' },
+    'south-africa.txt': { date: '', location: 'South Africa' },
+    'thailand.txt':     { date: '', location: 'Thailand' },
+  },
 
   'posts/': {
     'first-post.txt': {
@@ -608,6 +639,7 @@ around with AI tools.`
 let cmdHistory = [];
 let histIdx    = -1;
 let bootHTML   = '';
+let isRunning  = false;
 
 /* ── DOM ─────────────────────────────────────────────────────────── */
 const terminal  = document.getElementById('terminal');
@@ -656,12 +688,15 @@ const CMDS = {
   <span style="color:#ffd700">about</span>            who am I
   <span style="color:#ffd700">ls</span>               list files
   <span style="color:#ffd700">ls posts/</span>        list blog posts
+  <span style="color:#ffd700">ls travel_log/</span>   list visited destinations
   <span style="color:#ffd700">cat</span> [file]       select and read a file
   <span style="color:#ffd700">contact</span>          get in touch
   <span style="color:#ffd700">neofetch</span>         system info
   <span style="color:#ffd700">portrait</span>         ASCII portrait
   <span style="color:#ffd700">clear</span>            clear screen
   <span style="color:#ffd700">coleman-ai</span>       open Coleman AI project
+  <span style="color:#ffd700">travel_log</span>       view travel log
+  <span style="color:#ffd700">gui</span>              ← switch to GUI / visual mode
 
 <span style="color:#333">tip: use ↑↓ for history, Tab for completion</span>`
     );
@@ -671,7 +706,7 @@ const CMDS = {
     const target = (args[0] || '').replace(/\/$/, '');
     if (!target || target === '.' || target === '~') {
       print(
-`<span style="color:#00d4ff">about.txt</span>   <span style="color:#00d4ff">contact.txt</span>   <span style="color:#ffd700">posts/</span>`
+`<span style="color:#00d4ff">about.txt</span>   <span style="color:#00d4ff">contact.txt</span>   <span style="color:#ffd700">posts/</span>   <span style="color:#ffd700">travel_log/</span>`
       );
     } else if (target === 'posts') {
       const entries = Object.entries(FS['posts/']);
@@ -679,6 +714,17 @@ const CMDS = {
         `  <span style="color:#00d4ff">${esc(name)}</span>   <span style="color:#555">${f.date} — ${esc(f.title)}</span>`
       ).join('\n');
       print(`posts/\n${lines}`);
+    } else if (target === 'travel_log') {
+      const entries = Object.entries(FS['travel_log/']);
+      if (!entries.length) {
+        print(`<span style="color:#555">travel_log/ — empty</span>`);
+      } else {
+        const lines = entries.map(([name, e]) => {
+          const meta = e.date ? `${e.date} — ${esc(e.location)}` : esc(e.location);
+          return `  <span style="color:#00d4ff">${esc(name)}</span>   <span style="color:#555">${meta}</span>`;
+        }).join('\n');
+        print(`travel_log/\n${lines}`);
+      }
     } else {
       print(`<span style="color:#ff5555">ls: cannot access '${esc(target)}': No such file or directory</span>`);
     }
@@ -698,6 +744,11 @@ const CMDS = {
     const bare = path.replace(/^posts\//, '');
     const post = FS['posts/'][bare];
     if (post) { printText(post.body); return; }
+
+    // travel_log/filename or just filename
+    const tlBare  = path.replace(/^travel_log\//, '');
+    const tlEntry = FS['travel_log/'][tlBare];
+    if (tlEntry) { printText(tlEntry.body || `${tlEntry.location}\n${tlEntry.date}`); return; }
 
     print(`<span style="color:#ff5555">cat: ${esc(path)}: No such file or directory</span>`);
   },
@@ -763,12 +814,44 @@ const CMDS = {
     if (args[0] === '-a') printText('CochranOS cochran-terminal 1.0.0 JS/ES2024 x86_64');
     else printText('CochranOS');
   },
+
+  gui() {
+    setMode('gui');
+  },
+
+  'travel_log'() {
+    const entries = Object.entries(FS['travel_log/']);
+    if (!entries.length) {
+      print(
+`<span style="color:#e8e8e8">travel log</span>
+<span style="color:#333">────────────────────────────────────────────────</span>
+  <span style="color:#555">no entries yet</span>
+
+  use <span style="color:#ffd700">ls travel_log/</span> to list destinations
+  use <span style="color:#ffd700">cat travel_log/[file]</span> to read an entry`
+      );
+      return;
+    }
+    const lines = entries.map(([, e]) => {
+      const datePart = e.date ? `   <span style="color:#555">${e.date}</span>` : '';
+      return `  <span style="color:#00d4ff">${esc(e.location)}</span>${datePart}`;
+    }).join('\n');
+    print(
+`<span style="color:#e8e8e8">travel log</span>  <span style="color:#555">— ${entries.length} destination${entries.length !== 1 ? 's' : ''}</span>
+<span style="color:#333">────────────────────────────────────────────────</span>
+${lines}
+
+  use <span style="color:#ffd700">cat travel_log/[file]</span> to read an entry`
+    );
+  },
 };
 
 /* ── Tab completion ──────────────────────────────────────────────── */
-const ALL_CMDS   = Object.keys(CMDS);
-const POST_FILES = Object.keys(FS['posts/']).map(f => 'posts/' + f);
-const BARE_POSTS = Object.keys(FS['posts/']); // e.g. 'first-post.txt'
+const ALL_CMDS     = Object.keys(CMDS);
+const POST_FILES   = Object.keys(FS['posts/']).map(f => 'posts/' + f);
+const BARE_POSTS   = Object.keys(FS['posts/']);
+const TRAVEL_FILES = Object.keys(FS['travel_log/']).map(f => 'travel_log/' + f);
+const BARE_TRAVEL  = Object.keys(FS['travel_log/']);
 
 function completions(partial) {
   const parts = partial.trimStart().split(/\s+/);
@@ -781,39 +864,43 @@ function completions(partial) {
   const cmd = parts[0];
   const arg = parts[parts.length - 1] || '';
 
-  // cat: if arg starts with 'posts' use prefixed paths,
-  //      otherwise offer flat names (about.txt, contact.txt, first-post.txt, ...)
+  // cat: route by prefix, fall back to all flat names
   if (cmd === 'cat') {
     const pool = arg.startsWith('posts')
       ? POST_FILES
-      : ['about.txt', 'contact.txt', ...BARE_POSTS];
+      : arg.startsWith('travel')
+      ? TRAVEL_FILES
+      : ['about.txt', 'contact.txt', ...BARE_POSTS, ...BARE_TRAVEL];
     return pool.filter(f => f.startsWith(arg));
   }
 
-  // ls: only 'posts/' is a valid argument
+  // ls: valid directory arguments
   if (cmd === 'ls') {
-    return ['posts/'].filter(f => f.startsWith(arg));
+    return ['posts/', 'travel_log/'].filter(f => f.startsWith(arg));
   }
 
   return [];
 }
 
 /* ── Input handling ──────────────────────────────────────────────── */
-cmdInput.addEventListener('keydown', e => {
+cmdInput.addEventListener('keydown', async e => {
   if (e.key === 'Enter') {
+    if (isRunning) return;
     const raw = cmdInput.value;
     const trimmed = raw.trim();
 
     printRaw(
       `<span style="color:#aaaaaa">visitor</span><span style="color:#333">@</span><span style="color:#e8e8e8">cochran</span><span style="color:#333">:~$</span> <span style="color:#e8e8e8">${esc(raw)}</span>`
     );
+    cmdInput.value = '';
 
     if (trimmed) {
       cmdHistory.push(trimmed);
       histIdx = cmdHistory.length;
-      runCmd(trimmed);
+      isRunning = true;
+      await runCmd(trimmed);
+      isRunning = false;
     }
-    cmdInput.value = '';
     scrollDown();
     return;
   }
@@ -867,10 +954,39 @@ cmdInput.addEventListener('keydown', e => {
   }
 });
 
-function runCmd(raw) {
+/* ── Loader animation ────────────────────────────────────────────── */
+function showLoader() {
+  return new Promise(resolve => {
+    const el = document.createElement('span');
+    el.className = 'out-block dim';
+    output.appendChild(el);
+    scrollDown();
+
+    const steps = [0, 12, 26, 42, 58, 72, 84, 93, 100];
+    const W = 20;
+    let i = 0;
+
+    function tick() {
+      const pct    = steps[i];
+      const filled = Math.round(pct / 100 * W);
+      el.textContent = `[${'#'.repeat(filled)}${'.'.repeat(W - filled)}] ${pct}%`;
+      scrollDown();
+      i++;
+      if (i < steps.length) {
+        setTimeout(tick, 35);
+      } else {
+        setTimeout(() => { el.remove(); resolve(); }, 70);
+      }
+    }
+    tick();
+  });
+}
+
+async function runCmd(raw) {
   const parts = raw.trim().split(/\s+/);
   const cmd   = parts[0].toLowerCase();
   const args  = parts.slice(1);
+  await showLoader();
   if (CMDS[cmd]) {
     CMDS[cmd](args);
   } else {
@@ -885,7 +1001,9 @@ document.addEventListener('click', () => cmdInput.focus());
 (function boot() {
   print(
 `<span style="color:#555">cochran-terminal v1.0.0  —  ${new Date().toDateString()}
-type <span style="color:#e8e8e8">help</span> to see available commands</span>`
+type <span style="color:#e8e8e8">help</span> to see available commands
+<span style="color:#333">────────────────────────────────────────────────</span>
+<span style="color:#ffd700">→ type <span style="color:#e8e8e8">gui</span> to switch to the visual / GUI view</span></span>`
   );
   printRaw('');
   bootHTML = output.innerHTML;
@@ -896,19 +1014,16 @@ function setMode(mode) {
   const termView = document.getElementById('terminal-view');
   const guiView  = document.getElementById('gui-view');
   const btnT     = document.getElementById('btn-terminal');
-  const btnG     = document.getElementById('btn-gui');
 
   if (mode === 'terminal') {
     termView.style.display = 'flex';
     guiView.style.display  = 'none';
     btnT.classList.add('active');
-    btnG.classList.remove('active');
     cmdInput.focus();
   } else {
     termView.style.display = 'none';
     guiView.style.display  = 'block';
     btnT.classList.remove('active');
-    btnG.classList.add('active');
     buildGUI();
   }
 }
@@ -942,6 +1057,38 @@ function buildGUI() {
     item.appendChild(body);
     postsList.appendChild(item);
   });
+
+  const travelList    = document.getElementById('gui-travel-list');
+  const travelEntries = Object.entries(FS['travel_log/']);
+  if (!travelEntries.length) {
+    const placeholder = document.createElement('p');
+    placeholder.style.cssText = 'color:#444;font-size:12px;padding-top:14px;';
+    placeholder.textContent = 'No entries yet.';
+    travelList.appendChild(placeholder);
+  } else {
+    travelEntries.forEach(([, entry]) => {
+      const item = document.createElement('div');
+      item.className = 'gui-post-item';
+
+      const header = document.createElement('div');
+      header.className = 'gui-post-header';
+      header.innerHTML =
+        `<span class="gui-post-title">${esc(entry.location)}</span>` +
+        `<span class="gui-post-meta">${entry.date ? esc(entry.date) : ''}</span>`;
+
+      item.appendChild(header);
+
+      if (entry.body) {
+        const body = document.createElement('div');
+        body.className = 'gui-post-body';
+        body.textContent = entry.body;
+        header.addEventListener('click', () => body.classList.toggle('open'));
+        item.appendChild(body);
+      }
+
+      travelList.appendChild(item);
+    });
+  }
 }
 
 /* ── GUI tab switching ───────────────────────────────────────────── */
