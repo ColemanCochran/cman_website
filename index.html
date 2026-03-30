@@ -747,8 +747,7 @@ const CMDS = {
   <span style="color:#ffd700">portrait</span>         ASCII portrait
   <span style="color:#ffd700">clear</span>            clear screen
   <span style="color:#ffd700">coleman-ai</span>       open Coleman AI project
-  <span style="color:#ffd700">travel_log</span>       view travel log
-  <span style="color:#ffd700">map</span>              world map + Europe detail
+  <span style="color:#ffd700">travel_log</span>       destinations visited + world map
   <span style="color:#ffd700">gui</span>              ← switch to GUI / visual mode
 
 <span style="color:#333">tip: use ↑↓ for history, Tab for completion</span>`
@@ -872,17 +871,13 @@ const CMDS = {
     setMode('gui');
   },
 
-  map() {
-    const worldEl  = document.getElementById('data-world-map');
-    const europeEl = document.getElementById('data-europe-map');
-    const worldArt  = worldEl  ? worldEl.textContent.replace(/\r/g, '').replace(/^\n+/, '').replace(/\n+$/, '')  : '(map unavailable)';
-    const europeArt = europeEl ? europeEl.textContent.replace(/\r/g, '').replace(/^\n+/, '').replace(/\n+$/, '') : '(map unavailable)';
+  'travel_log'() {
+    const worldEl = document.getElementById('data-world-map');
+    const worldArt = worldEl ? worldEl.textContent.replace(/\r/g, '').replace(/^\n+/, '').replace(/\n+$/, '') : '(map unavailable)';
 
     print(
-`<span style="color:#e8e8e8">world map</span>  <span style="color:#555">— 24 destinations</span>
-
-<span style="color:#444">${esc(worldArt)}</span>
-
+`<span style="color:#e8e8e8">travel log</span>  <span style="color:#555">— 24 destinations</span>
+<span style="color:#333">────────────────────────────────────────────────</span>
   <span style="color:#555">Americas  </span>Canada · Mexico · Costa Rica · St. Lucia · Peru
   <span style="color:#555">Europe    </span>Iceland · United Kingdom · France · Spain · Portugal · Italy
             Germany · Poland · Belgium · Denmark · Austria · Czechia
@@ -890,32 +885,7 @@ const CMDS = {
   <span style="color:#555">Africa    </span>Morocco · South Africa
   <span style="color:#555">Asia      </span>Thailand
 
-<span style="color:#333">────────────────────────────────────────────────────────────────────────────</span>
-
-<span style="color:#e8e8e8">europe</span>  <span style="color:#555">— 16 countries visited</span>
-
-<span style="color:#444">${esc(europeArt)}</span>`
-    );
-  },
-
-  'travel_log'() {
-    const entries = Object.entries(FS['travel_log/']);
-    if (!entries.length) {
-      print(
-`<span style="color:#e8e8e8">travel log</span>
-<span style="color:#333">────────────────────────────────────────────────</span>
-  <span style="color:#555">no entries yet</span>`
-      );
-      return;
-    }
-    const lines = entries.map(([, e]) => {
-      const datePart = e.date ? `   <span style="color:#555">${e.date}</span>` : '';
-      return `  <span style="color:#00d4ff">${esc(e.location)}</span>${datePart}`;
-    }).join('\n');
-    print(
-`<span style="color:#e8e8e8">travel log</span>  <span style="color:#555">— ${entries.length} destination${entries.length !== 1 ? 's' : ''}</span>
-<span style="color:#333">────────────────────────────────────────────────</span>
-${lines}`
+<span style="color:#444">${esc(worldArt)}</span>`
     );
   },
 };
